@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحليل الاحتياجات التنموية للمراكز - جمعية البر بالأحساء</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#1b4332',
+                            primary: '#2d6a4f',
+                            medium: '#40916c',
+                            emerald: '#52b788',
+                            gold: '#d4af37',
+                            softBg: '#f0f4f1'
+                        }
+                    },
+                    fontFamily: { cairo: ['Cairo', 'sans-serif'], tajawal: ['Tajawal', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style> body { font-family: 'Cairo', sans-serif; background-color: #f8f9fa; } </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- هيدر الصفحة -->
+    <header class="bg-gradient-to-r from-[#1b4332] to-[#2d6a4f] text-white py-6 border-b-4 border-brand-gold shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-xl sm:text-2xl font-bold font-tajawal">لوحة تحليل الاحتياجات التنموية للمراكز</h1>
+            <a href="index.html" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-sm font-bold transition flex items-center gap-2">
+                <i class="fa-solid fa-house"></i>
+                <span>العودة للرئيسية</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        
+        <!-- لوحة التحليل -->
+        <section class="bg-white rounded-3xl shadow-xl p-6 sm:p-8 mb-12 border-2 border-brand-primary/30">
+            <div class="text-center max-w-2xl mx-auto mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold text-brand-dark font-tajawal">اختر مركزك التنموي</h2>
+                <p class="text-gray-500 text-sm mt-1">استعرض نتائج الاستبيان والأولويات والبرامج العشرة المخصصة:</p>
+            </div>
+
+            <!-- القائمة المنسدلة -->
+            <div class="max-w-xl mx-auto mb-8">
+                <select id="centerSelect" onchange="updateCenterDashboard()" class="w-full py-4 px-5 rounded-2xl border-2 border-brand-primary focus:ring-4 focus:ring-brand-primary/20 outline-none transition text-base font-bold bg-brand-softBg text-brand-dark cursor-pointer shadow-sm">
+                </select>
+            </div>
+
+            <!-- تفاصيل المركز والرسوم البيانية -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-brand-softBg/50 rounded-2xl p-6 border border-brand-medium/20 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-brand-dark text-lg font-tajawal flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-brand-primary"></i>
+                                <span>ملخص الاحتياجات التنموية للمركز</span>
+                            </h3>
+                            <span id="sampleCountBadge" class="px-3 py-1 rounded-full bg-brand-gold text-brand-dark font-extrabold text-xs">العينة: 0</span>
+                        </div>
+                        <p id="centerDescription" class="text-gray-600 text-sm mb-4 font-medium leading-relaxed"></p>
+                        <hr class="border-gray-200 mb-4">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">أعلى الاحتياجات رصداً:</h4>
+                        <ul id="centerNeedsList" class="space-y-2 mb-4"></ul>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 bg-white rounded-2xl p-6 border border-gray-100 shadow-sm flex flex-col items-center justify-center">
+                    <h3 class="font-bold text-brand-dark text-sm font-tajawal mb-3 text-center">
+                        <i class="fa-solid fa-chart-pie text-brand-gold ml-1"></i> التنوع الاستراتيجي للبرامج الـ 10
+                    </h3>
+                    <div class="relative w-full h-64">
+                        <canvas id="pathChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول البرامج العشرة -->
+            <div class="mt-8">
+                <h3 class="font-bold text-brand-dark text-lg font-tajawal mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brand-primary"></i>
+                    <span>أبرز 10 برامج مخصصة للمركز</span>
+                </h3>
+                <div class="overflow-x-auto rounded-2xl border border-gray-200 shadow-sm">
+                    <table class="w-full text-right border-collapse bg-white">
+                        <thead>
+                            <tr class="bg-brand-softBg text-brand-dark text-xs sm:text-sm font-bold border-b border-gray-200">
+                                <th class="p-3.5 text-center w-12">#</th>
+                                <th class="p-3.5">اسم البرنامج / المشروع</th>
+                                <th class="p-3.5">المبادرة الاستراتيجية</th>
+                                <th class="p-3.5">الفئة المستهدفة</th>
+                                <th class="p-3.5">علاقة البرنامج بالاحتياج التنموي</th>
+                            </tr>
+                        </thead>
+                        <tbody id="centerProgramsTableBody" class="divide-y divide-gray-100 text-xs sm:text-sm"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const dashboardData = [
+          {
+            "id": "center_1",
+            "name": "مركز جمعية البر فرع الفيصلية",
+            "count": 50,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (32 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل في التجميل وفن المكياج (30 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل صناعة المخبوزات لحلويات (29 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (39 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (36 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (28 صوت)"
+            ],
+            "programs": [
+              { "name": "تعليم اللغة الإنجليزية الصيفي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (39 صوتاً)." },
+              { "name": "التقوية الدراسية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (36 صوتاً)." },
+              { "name": "ورشة عمل في التجميل وفن المكياج", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (30 صوتاً)." },
+              { "name": "ورشة عمل صناعة المخبوزات لحلويات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (29 صوتاً)." },
+              { "name": "مهارات الحاسب الآلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (28 صوتاً)." },
+              { "name": "ورشة عمل التعامل مع المراهق", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (22 صوتاً)." },
+              { "name": "ورشة عمل فن صناعة الشموع", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (20 صوتاً)." },
+              { "name": "ورشة عمل صمم متجرك الإلكتروني", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (18 صوتاً)." },
+              { "name": "مبادرة حملة التبرع بالدم", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (17 صوتاً)." },
+              { "name": "ورشة صيانة السيارات", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_2",
+            "name": "مركز جمعية البر فرع المزروعية",
+            "count": 59,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (36 صوت)",
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (33 صوت)",
+              "احتياج عائل الأسرة: دورة تدريبية ميزانية الأسرة (32 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (43 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (40 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (38 صوت)"
+            ],
+            "programs": [
+              { "name": "التقوية الدراسية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (40 صوتاً)." },
+              { "name": "مهارات الحاسب الآلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (38 صوتاً)." },
+              { "name": "دورة صيانة الأجهزة الذكية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (33 صوتاً)." },
+              { "name": "القدرات العامة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (30 صوتاً)." },
+              { "name": "التأهيل الى سوق العمل", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (29 صوتاً)." },
+              { "name": "مبادرة حملة التبرع بالدم", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (26 صوتاً)." },
+              { "name": "ورشة عمل صناعة العطور", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "تقديم استشارات قانونية مجانية للمستفيد", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "ورشة عمل صمم متجرك الإلكتروني", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "ورشة عمل صناعة السيرة الذاتية واجتياز المقابلات الشخصية", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." }
+            ]
+          },
+          {
+            "id": "center_3",
+            "name": "مركز جمعية البر فرع الجبيل",
+            "count": 47,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (31 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل في التجميل وفن المكياج (30 صوت)",
+              "احتياج عائل الأسرة: دورة تدريبية ميزانية الأسرة (27 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (40 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (33 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (31 صوت)"
+            ],
+            "programs": [
+              { "name": "تعليم اللغة الإنجليزية الصيفي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (40 صوتاً)." },
+              { "name": "مهارات الحاسب الآلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (33 صوتاً)." },
+              { "name": "ورشة عمل في التجميل وفن المكياج", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (30 صوتاً)." },
+              { "name": "ورشة عمل صناعة المخبوزات لحلويات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (27 صوتاً)." },
+              { "name": "ورشة عمل صناعة العطور", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (25 صوتاً)." },
+              { "name": "ورشة عمل التعامل مع المراهق", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (22 صوتاً)." },
+              { "name": "ورشة عمل صناعة الجبسيات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." },
+              { "name": "ورشة عمل فن صناعة الشموع", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (17 صوتاً)." },
+              { "name": "دورة تدريبية ميزانية الأسر", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "عائل الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج أسرة سعيدة", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_4",
+            "name": "مركز جمعية البر فرع الصالحية",
+            "count": 68,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (45 صوت)",
+              "احتياج عائل الأسرة: التأهيل الى سوق العمل (41 صوت)",
+              "احتياج عائل الأسرة: مشروع التدريب على الصيانة المنزلية (38 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (42 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (41 صوت)",
+              "احتياج الأبناء: القدرات العامة (36 صوت)"
+            ],
+            "programs": [
+              { "name": "ورش عمل الاسعافات الأولية", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (45 صوتاً)." },
+              { "name": "التأهيل الى سوق العمل", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (41 صوتاً)." },
+              { "name": "مشروع التدريب على الصيانة المنزلية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (38 صوتاً)." },
+              { "name": "معرض الأسر المنتجة", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (37 صوتاً)." },
+              { "name": "القدرات العامة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (36 صوتاً)." },
+              { "name": "دورة صيانة الأجهزة الذكية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (32 صوتاً)." },
+              { "name": "ورشة عمل صناعة العطور", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (30 صوتاً)." },
+              { "name": "التحصيلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (29 صوتاً)." },
+              { "name": "ورشة عمل توعوية لمكافحة التدخين", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (22 صوتاً)." },
+              { "name": "منصة قبول الجامعي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (22 صوتاً)." }
+            ]
+          },
+          {
+            "id": "center_5",
+            "name": "مركز جمعية البر فرع حي الملك فهد",
+            "count": 31,
+            "needs": [
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (19 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل صناعة العطور (17 صوت)",
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (17 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (27 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (27 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (16 صوت)"
+            ],
+            "programs": [
+              { "name": "برنامج التطوع المهاري", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج جسر المهنة الأولى", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج مختبر الجودة والتحسين", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج توازن للصحة النفسية", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "منصة منتج حساوي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج التغليف الذكي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "أكاديمية الاستعداد الجامعي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "المهارات الحياتية لرب الأسرة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "عائل الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "نادي التعليم الذاتي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "أكاديمية العادات الدراسية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_6",
+            "name": "مركز جمعية البر فرع المبرز",
+            "count": 60,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (40 صوت)",
+              "احتياج عائل الأسرة: معرض الأسر المنتجة (35 صوت)",
+              "احتياج عائل الأسرة: تقديم استشارات قانونية مجانية للمستفيد (34 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (45 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (39 صوت)",
+              "احتياج الأبناء: القدرات العامة (31 صوت)"
+            ],
+            "programs": [
+              { "name": "تعليم اللغة الإنجليزية الصيفي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (45 صوتاً)." },
+              { "name": "ورش عمل الاسعافات الأولية", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (40 صوتاً)." },
+              { "name": "التقوية الدراسية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (39 صوتاً)." },
+              { "name": "معرض الأسر المنتجة", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (35 صوتاً)." },
+              { "name": "تقديم استشارات قانونية مجانية للمستفيد", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (34 صوتاً)." },
+              { "name": "القدرات العامة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (31 صوتاً)." },
+              { "name": "ورشة عمل التعامل مع المراهق", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (27 صوتاً)." },
+              { "name": "التأهيل الى سوق العمل", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (25 صوتاً)." },
+              { "name": "ورشة عمل الباريستا الاحترافي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." },
+              { "name": "التصميم والجرافيكس", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (12 صوتاً)." }
+            ]
+          },
+          {
+            "id": "center_7",
+            "name": "مركز جمعية البر فرع المطيرفي",
+            "count": 61,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (42 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل صناعة المخبوزات لحلويات (36 صوت)",
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (35 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (47 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (34 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (31 صوت)"
+            ],
+            "programs": [
+              { "name": "تعليم اللغة الإنجليزية الصيفي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (47 صوتاً)." },
+              { "name": "ورش عمل الاسعافات الأولية", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (42 صوتاً)." },
+              { "name": "ورشة عمل صناعة المخبوزات لحلويات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (36 صوتاً)." },
+              { "name": "دورة صيانة الأجهزة الذكية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (35 صوتاً)." },
+              { "name": "مهارات الحاسب الآلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (34 صوتاً)." },
+              { "name": "معرض الأسر المنتجة", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (33 صوتاً)." },
+              { "name": "مشروع التدريب على الصيانة المنزلية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (33 صوتاً)." },
+              { "name": "ورشة عمل في التجميل وفن المكياج", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (31 صوتاً)." },
+              { "name": "التحصيلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (30 صوتاً)." },
+              { "name": "ورشة عمل فنون الخياطة والتطريز", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (29 صوتاً)." }
+            ]
+          },
+          {
+            "id": "center_8",
+            "name": "مركز جمعية البر فرع النجاح",
+            "count": 44,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (33 صوت)",
+              "احتياج عائل الأسرة: معرض الأسر المنتجة (25 صوت)",
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (24 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (37 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (32 صوت)",
+              "احتياج الأبناء: القدرات العامة (24 صوت)"
+            ],
+            "programs": [
+              { "name": "ورش عمل الاسعافات الأولية", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (33 صوتاً)." },
+              { "name": "القدرات العامة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "مشروع التدريب على الصيانة المنزلية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (20 صوتاً)." },
+              { "name": "تقديم استشارات قانونية مجانية للمستفيد", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." },
+              { "name": "ورشة عمل فن صناعة الشموع", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (17 صوتاً)." },
+              { "name": "ورشة عمل الباريستا الاحترافي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (15 صوتاً)." },
+              { "name": "ورشة عمل صناعة الجبسيات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (15 صوتاً)." },
+              { "name": "ورشة عمل صناعة البشت الحساوي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (9 صوتاً)." },
+              { "name": "برنامج جذور", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "معسكر لغة الإشارة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_9",
+            "name": "مركز جمعية البر فرع القرين",
+            "count": 49,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (30 صوت)",
+              "احتياج عائل الأسرة: دورة تدريبية ميزانية الأسرة (28 صوت)",
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (27 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (38 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (37 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (27 صوت)"
+            ],
+            "programs": [
+              { "name": "التقوية الدراسية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (37 صوتاً)." },
+              { "name": "دورة صيانة الأجهزة الذكية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (27 صوتاً)." },
+              { "name": "التأهيل الى سوق العمل", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (25 صوتاً)." },
+              { "name": "مشروع التدريب على الصيانة المنزلية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (25 صوتاً)." },
+              { "name": "ورشة عمل صناعة العطور", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "مبادرة حملة التبرع بالدم", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (24 صوتاً)." },
+              { "name": "ورشة عمل صمم متجرك الإلكتروني", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." },
+              { "name": "الذكاء الاصطناعي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (17 صوتاً)." },
+              { "name": "ورشة عمل فنون الخياطة والتطريز", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (16 صوتاً)." },
+              { "name": "ورشة عمل التصوير الرقمي والاحترافي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (14 صوتاً)." }
+            ]
+          },
+          {
+            "id": "center_10",
+            "name": "مركز جمعية البر فرع الإسكان المبسط",
+            "count": 36,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (28 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل في التجميل وفن المكياج (23 صوت)",
+              "احتياج عائل الأسرة: معرض الأسر المنتجة (23 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (30 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (21 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (20 صوت)"
+            ],
+            "programs": [
+              { "name": "ورشة عمل فنون الخياطة والتطريز", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (20 صوتاً)." },
+              { "name": "برنامج منارات المعرفة", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "مختبر المهارات الرقمية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج مسار التوجيه المهني الفردي", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج مبهج", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "مبادرة جيران", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج فن العيش المتوازن", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج المهارات الحياتية للطفل", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "اللغة الإنجليزية الوظيفية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "أكاديمية القراءة التطبيقية", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_11",
+            "name": "مركز جمعية البر فرع الشقيق",
+            "count": 35,
+            "needs": [
+              "احتياج عائل الأسرة: دورة الاسعافات الأولية (23 صوت)",
+              "احتياج عائل الأسرة: دورة صيانة الأجهزة الذكية (21 صوت)",
+              "احتياج عائل الأسرة: دورة تدريبية ميزانية الأسرة (19 صوت)",
+              "احتياج الأبناء: القدرات العامة (23 صوت)",
+              "احتياج الأبناء: التحصيلي (21 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (18 صوت)"
+            ],
+            "programs": [
+              { "name": "التحصيلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (21 صوتاً)." },
+              { "name": "مبادرة حملة التبرع بالدم", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (16 صوتاً)." },
+              { "name": "دورة استخدام المنصات الحكومية", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج مسار التدرج الوظيفي", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج أسرتي مسؤوليتي (طرق في التربية وإدارة الأسرة)", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج طريق الآباء للتواصل الفعال", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "ورشة صناعة البخور الحساوي", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج رواد المستقبل", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "ورشة عمل العلامة التجارية البسيطة", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "الإرشاد الأكاديمي الذكي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          },
+          {
+            "id": "center_12",
+            "name": "مركز جمعية البر فرع بني معن",
+            "count": 42,
+            "needs": [
+              "احتياج عائل الأسرة: معرض الأسر المنتجة (29 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل صناعة المخبوزات لحلويات (27 صوت)",
+              "احتياج عائل الأسرة: ورشة عمل في التجميل وفن المكياج (25 صوت)",
+              "احتياج الأبناء: التقوية الدراسية (26 صوت)",
+              "احتياج الأبناء: مهارات الحاسب الآلي (25 صوت)",
+              "احتياج الأبناء: تعليم اللغة الإنجليزية الصيفي (24 صوت)"
+            ],
+            "programs": [
+              { "name": "معرض الأسر المنتجة", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (29 صوتاً)." },
+              { "name": "ورشة عمل صناعة المخبوزات لحلويات", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (27 صوتاً)." },
+              { "name": "ورشة عمل في التجميل وفن المكياج", "path": "الابتكار والريادة", "pathClass": "bg-purple-100 text-purple-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (25 صوتاً)." },
+              { "name": "ورشة عمل التعامل مع المراهق", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (21 صوتاً)." },
+              { "name": "التحصيلي", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأبناء", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (19 صوتاً)." },
+              { "name": "تقديم استشارات قانونية مجانية للمستفيد", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (18 صوتاً)." },
+              { "name": "التوعية بأهمية الكشف عن سرطان الثدي", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "الأسرة", "reason": "يلبي احتياجاً مباشراً بالمركز عبر (13 صوتاً)." },
+              { "name": "برنامج سفراء البر", "path": "النمو والتميز", "pathClass": "bg-emerald-100 text-emerald-900", "target": "الأبناء", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "برنامج بداية أسرية لرعاية الطفولة", "path": "جودة الحياة", "pathClass": "bg-blue-100 text-blue-900", "target": "عائل الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." },
+              { "name": "تعليم قيادة السيارة", "path": "بناء القدرات", "pathClass": "bg-amber-100 text-amber-900", "target": "الأسرة", "reason": "يدعم احتياجات المستفيدين غير المباشرة." }
+            ]
+          }
+        ];
+
+        let chartInstance = null;
+
+        function initCenterSelector() {
+            const select = document.getElementById('centerSelect');
+            if (!select) return;
+            select.innerHTML = '<option value="" disabled selected>-- اضغط هنا لاختيار المركز التنموي --</option>';
+            dashboardData.forEach(center => {
+                const opt = document.createElement('option');
+                opt.value = center.id;
+                opt.textContent = center.name;
+                select.appendChild(opt);
+            });
+            if (dashboardData.length > 0) {
+                select.value = dashboardData[0].id;
+                updateCenterDashboard();
+            }
+        }
+
+        function updateCenterDashboard() {
+            const selectedId = document.getElementById('centerSelect').value;
+            const center = dashboardData.find(c => c.id === selectedId);
+            if (!center) return;
+
+            document.getElementById('sampleCountBadge').innerText = `حجم العينة: ${center.count} مستفيداً`;
+            document.getElementById('centerDescription').textContent = `تم تحليل إجابات مستفيدي ${center.name} لاستخراج الأولويات التنموية وربطها بالبرامج العشرة المناسبة.`;
+
+            const needsList = document.getElementById('centerNeedsList');
+            needsList.innerHTML = '';
+            center.needs.forEach(need => {
+                const li = document.createElement('li');
+                li.className = "flex items-center gap-2 text-xs sm:text-sm font-bold text-gray-700 bg-white p-2.5 rounded-xl shadow-sm border border-gray-100";
+                li.innerHTML = `<i class="fa-solid fa-check-circle text-brand-primary"></i> <span>${need}</span>`;
+                needsList.appendChild(li);
+            });
+
+            const tbody = document.getElementById('centerProgramsTableBody');
+            tbody.innerHTML = '';
+
+            const pathCounts = { 'النمو والتميز': 0, 'الابتكار والريادة': 0, 'بناء القدرات': 0, 'جودة الحياة': 0 };
+
+            center.programs.forEach((prog, index) => {
+                if (pathCounts[prog.path] !== undefined) pathCounts[prog.path]++;
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 transition";
+                tr.innerHTML = `
+                    <td class="p-3.5 text-center font-bold text-gray-400">${index + 1}</td>
+                    <td class="p-3.5 font-bold text-brand-dark">${prog.name}</td>
+                    <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-xs font-bold ${prog.pathClass}">${prog.path}</span></td>
+                    <td class="p-3.5 font-semibold text-gray-600">${prog.target}</td>
+                    <td class="p-3.5 text-gray-500 font-medium">${prog.reason}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPathChart(pathCounts);
+        }
+
+        function renderPathChart(pathCounts) {
+            const ctx = document.getElementById('pathChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(pathCounts),
+                    datasets: [{
+                        data: Object.values(pathCounts),
+                        backgroundColor: ['#2d6a4f', '#7209b7', '#f4a261', '#4361ee'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: 'Cairo', size: 11, weight: 'bold' }, boxWidth: 12 } } }
+                }
+            });
+        }
+
+        window.onload = function() { initCenterSelector(); };
+    </script>
+</body>
+</html>
